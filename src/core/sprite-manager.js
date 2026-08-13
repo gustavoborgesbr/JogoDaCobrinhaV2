@@ -1,58 +1,56 @@
 /**
  * Sprite Manager
- * Gerencia carregamento e renderização de sprites
+ * Gerencia carregamento, mapeamento de coordenadas e renderização de sprites.
  */
-
 class SpriteManager {
     constructor() {
         this.sprites = {};
         this.spriteSheet = null;
         this.isLoaded = false;
 
-        // Dimensões dos sprites na sheet
-        this.SPRITE_WIDTH = 40;
-        this.SPRITE_HEIGHT = 40;
+        // Dimensões padrão para fallback caso w ou h não sejam definidos no mapa
+        this.DEFAULT_WIDTH = 40;
+        this.DEFAULT_HEIGHT = 40;
 
-        // Mapa de posições dos sprites na sheet
-        // Formato: { directionAndFrame: { x, y } }
+        // Mapa de posições e dimensões dos sprites na sheet (x, y, w, h)
         this.spriteMap = {
             // Movimento CIMA (up) - 5 frames
-            'up_0': { x: 311, y: 97 },
-            'up_1': { x: 483, y: 97 },
-            'up_2': { x: 655, y: 97 },
-            'up_3': { x: 827, y: 97 },
-            'up_4': { x: 1094, y: 97 },
+            'up_0': { x: 311, y: 97, w: 40, h: 60 },
+            'up_1': { x: 483, y: 97, w: 40, h: 60 },
+            'up_2': { x: 655, y: 97, w: 40, h: 60 },
+            'up_3': { x: 827, y: 97, w: 50, h: 60 },
+            'up_4': { x: 1094, y: 97, w: 60, h: 60 },
 
             // Movimento BAIXO (down) - 5 frames
-            'down_0': { x: 277, y: 270 },
-            'down_1': { x: 483, y: 270 },
-            'down_2': { x: 655, y: 270 },
-            'down_3': { x: 827, y: 270 },
-            'down_4': { x: 1094, y: 270 },
+            'down_0': { x: 277, y: 270, w: 40, h: 60 },
+            'down_1': { x: 483, y: 270, w: 40, h: 60 },
+            'down_2': { x: 655, y: 270, w: 40, h: 60 },
+            'down_3': { x: 827, y: 270, w: 50, h: 60 },
+            'down_4': { x: 1094, y: 270, w: 60, h: 60 },
 
-            // Movimento ESQUERDA (left) - 4 frames
-            'left_0': { x: 277, y: 420 },
-            'left_1': { x: 483, y: 420 },
-            'left_2': { x: 655, y: 420 },
-            'left_3': { x: 827, y: 420 },
+            // Movimento ESQUERDA (left) - 4 frames (sprites mais compridos)
+            'left_0': { x: 277, y: 420, w: 120, h: 35 },
+            'left_1': { x: 483, y: 420, w: 120, h: 35 },
+            'left_2': { x: 655, y: 420, w: 120, h: 35 },
+            'left_3': { x: 827, y: 420, w: 120, h: 35 },
 
-            // Movimento DIREITA (right) - 4 frames
-            'right_0': { x: 277, y: 560 },
-            'right_1': { x: 483, y: 560 },
-            'right_2': { x: 655, y: 560 },
-            'right_3': { x: 827, y: 560 },
+            // Movimento DIREITA (right) - 4 frames (sprites mais compridos)
+            'right_0': { x: 277, y: 560, w: 120, h: 35 },
+            'right_1': { x: 483, y: 560, w: 120, h: 35 },
+            'right_2': { x: 655, y: 560, w: 120, h: 35 },
+            'right_3': { x: 827, y: 560, w: 120, h: 35 },
 
             // Cabeça estática
-            'head_up': { x: 100, y: 740 },
-            'head_down': { x: 277, y: 740 },
-            'head_left': { x: 453, y: 740 },
-            'head_right': { x: 629, y: 740 },
+            'head_up': { x: 100, y: 740, w: 45, h: 45 },
+            'head_down': { x: 277, y: 740, w: 45, h: 45 },
+            'head_left': { x: 453, y: 740, w: 45, h: 45 },
+            'head_right': { x: 629, y: 740, w: 45, h: 45 },
 
             // Corpo (segmentos)
-            'body_straight': { x: 102, y: 795 },
-            'body_curve_left': { x: 233, y: 795 },
-            'body_curve_right': { x: 364, y: 795 },
-            'body_tail': { x: 495, y: 795 }
+            'body_straight': { x: 102, y: 795, w: 30, h: 45 },
+            'body_curve_left': { x: 233, y: 795, w: 35, h: 45 },
+            'body_curve_right': { x: 364, y: 795, w: 35, h: 45 },
+            'body_tail': { x: 495, y: 795, w: 25, h: 45 }
         };
 
         this.init();
@@ -66,11 +64,11 @@ class SpriteManager {
             this.spriteSheet = new Image();
             this.spriteSheet.onload = () => {
                 this.isLoaded = true;
-                console.log('✅ Sprite Sheet carregado!');
+                console.log('✅ Sprite Sheet carregado com sucesso!');
                 resolve();
             };
             this.spriteSheet.onerror = () => {
-                console.error('❌ Erro ao carregar sprite sheet');
+                console.error('❌ Erro ao carregar a sprite sheet em assets/sprites/cobra-sprites.png');
                 resolve();
             };
             this.spriteSheet.src = 'assets/sprites/cobra-sprites.png';
@@ -78,9 +76,9 @@ class SpriteManager {
     }
 
     /**
-     * Desenha um frame específico da sprite sheet
+     * Desenha um frame específico recortado da sprite sheet no Canvas
      */
-    drawSprite(ctx, spriteKey, x, y, width = 20, height = 20) {
+    drawSprite(ctx, spriteKey, destX, destY, destW = 20, destH = 20) {
         if (!this.isLoaded || !this.spriteSheet) return;
 
         const sprite = this.spriteMap[spriteKey];
@@ -89,21 +87,26 @@ class SpriteManager {
             return;
         }
 
+        // Recupera largura e altura específicas do frame ou usa o padrão
+        const cropWidth = sprite.w || this.DEFAULT_WIDTH;
+        const cropHeight = sprite.h || this.DEFAULT_HEIGHT;
+
+        // Executa o corte e o desenho no Canvas
         ctx.drawImage(
             this.spriteSheet,
-            sprite.x,
-            sprite.y,
-            this.SPRITE_WIDTH,
-            this.SPRITE_HEIGHT,
-            x,
-            y,
-            width,
-            height
+            sprite.x,   // Origem X na imagem
+            sprite.y,   // Origem Y na imagem
+            cropWidth,  // Largura do recorte na imagem
+            cropHeight, // Altura do recorte na imagem
+            destX,      // Posição X no Canvas
+            destY,      // Posição Y no Canvas
+            destW,      // Largura final no Canvas (tamanho da célula da grid)
+            destH       // Altura final no Canvas (tamanho da célula da grid)
         );
     }
 
     /**
-     * Retorna a chave de sprite para uma direção
+     * Retorna a chave de sprite para uma direção de movimento animado
      */
     getMovementSpriteKey(direction, frameIndex) {
         let dirName = 'right';
@@ -126,7 +129,7 @@ class SpriteManager {
     }
 
     /**
-     * Retorna sprite de cabeça para uma direção
+     * Retorna sprite de cabeça estática para uma direção
      */
     getHeadSpriteKey(direction) {
         if (direction.x === 0 && direction.y === -1) return 'head_up';
@@ -137,12 +140,12 @@ class SpriteManager {
     }
 
     /**
-     * Retorna sprite de corpo
+     * Retorna sprite de segmento do corpo
      */
     getBodySpriteKey(segmentType = 'straight') {
         return `body_${segmentType}`;
     }
 }
 
-// Criar instância global
+// Criar instância global do gerenciador
 const spriteManager = new SpriteManager();
