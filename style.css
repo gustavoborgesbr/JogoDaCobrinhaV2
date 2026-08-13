@@ -1,0 +1,139 @@
+/* ============================================
+   Variáveis CSS (Tema)
+   ============================================ */
+:root {
+    --primary-bg: #1a1a2e;
+    --secondary-bg: #16213e;
+    --accent-color: #0f3460;
+    --success-color: #27ae60;
+    --danger-color: #e74c3c;
+    --warning-color: #f39c12;
+    --text-color: #ecf0f1;
+    --text-secondary: #bdc3c7;
+    
+    --font-family: 'Arial', sans-serif;
+    --grid-size: 20px;
+}
+
+/* ============================================
+   Reset e estilos globais
+   ============================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--primary-bg);
+    color: var(--text-color);
+    font-family: var(--font-family);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* ============================================
+   Container do jogo
+   ============================================ */
+#game-container {
+    position: relative;
+    width: 800px;
+    height: 600px;
+    background-color: var(--secondary-bg);
+    border: 3px solid var(--accent-color);
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-color: var(--primary-bg);
+}
+
+/* ============================================
+   HUD
+   ============================================ */
+#hud {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    height: 60px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--accent-color);
+    border-radius: 4px;
+    padding: 10px;
+    font-size: 14px;
+    color: var(--text-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+}
+
+/* ============================================
+   Menus (tela inicial, game over, etc)
+   ============================================ */
+.menu {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 200;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+}
+
+.menu.active {
+    display: flex;
+}
+
+.menu h1 {
+    font-size: 48px;
+    margin-bottom: 20px;
+    color: var(--accent-color);
+}
+
+.menu p {
+    font-size: 16px;
+    margin-bottom: 30px;
+    color: var(--text-secondary);
+}
+
+.menu button {
+    background-color: var(--accent-color);
+    color: var(--text-color);
+    border: none;
+    padding: 12px 30px;
+    margin: 10px;
+    font-size: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.menu button:hover {
+    background-color: var(--success-color);
+}
+
+/* ============================================
+   Responsivo
+   ============================================ */
+@media (max-width: 900px) {
+    #game-container {
+        width: 90vw;
+        height: 67.5vw;
+        max-width: 800px;
+        max-height: 600px;
+    }
+}

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cobrinha RPG - Web</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+        <div id="hud"></div>
+    </div>
+
+    <!-- Scripts de sistema core -->
+    <script src="src/core/grid.js"></script>
+    <script src="src/core/input.js"></script>
+    <script src="src/core/save.js"></script>
+
+    <!-- Scripts de entidades -->
+    <script src="src/entities/snake.js"></script>
+    <script src="src/entities/enemy.js"></script>
+    <script src="src/entities/item.js"></script>
+
+    <!-- Scripts de sistemas -->
+    <script src="src/systems/xp.js"></script>
+    <script src="src/systems/skills.js"></script>
+    <script src="src/systems/combat.js"></script>
+
+    <!-- Scripts de fases -->
+    <script src="src/stages/stage1.js"></script>
+    <script src="src/stages/stage2.js"></script>
+    <script src="src/stages/boss.js"></script>
+
+    <!-- Scripts de UI -->
+    <script src="src/ui/hud.js"></script>
+    <script src="src/ui/menus.js"></script>
+
+    <!-- Main loop -->
+    <script src="src/main.js"></script>
+</body>
+</html>
