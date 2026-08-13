@@ -73,7 +73,7 @@ class SpriteManager {
                 console.error('❌ Erro ao carregar sprite sheet');
                 resolve();
             };
-            this.spriteSheet.src = 'assets/sprites/ChatGPT Image 13 de ago. de 2026, 11_38_03.png';
+            this.spriteSheet.src = 'assets/sprites/cobra-sprites.png';
         });
     }
 
