@@ -95,7 +95,8 @@ class MenuSystem {
      * Inicia o jogo
      */
     startGame() {
-        this.showMenu(null); // Ocultar menus
+        // Ocultar todos os menus
+        document.querySelectorAll('.menu').forEach(m => m.classList.remove('active'));
         
         // Criar novo jogo
         if (window.game) {
@@ -103,7 +104,11 @@ class MenuSystem {
         }
 
         window.game = new Game();
-        window.game.start();
+        
+        // Aguardar inicialização e depois iniciar
+        window.game.init().then(() => {
+            window.game.start();
+        });
     }
 
     /**

@@ -23,6 +23,11 @@ class Snake {
         this.xp = 0;
         this.xpToNextLevel = 100;
 
+        // Sistema de animação
+        this.animationFrameIndex = 0;
+        this.animationSpeed = 100; // ms entre frames
+        this.lastAnimationTime = Date.now();
+
         this.color = '#27ae60';
         this.headColor = '#2ecc71';
     }
@@ -133,9 +138,57 @@ class Snake {
     }
 
     /**
-     * Desenha a cobra no canvas
+     * Atualiza animação
+     */
+    updateAnimation() {
+        const now = Date.now();
+        if (now - this.lastAnimationTime >= this.animationSpeed) {
+            // Aumentar frame baseado na direção
+            const maxFrames = (this.direction.x === 0) ? 5 : 4;
+            this.animationFrameIndex = (this.animationFrameIndex + 1) % maxFrames;
+            this.lastAnimationTime = now;
+        }
+    }
+
+    /**
+     * Desenha a cobra no canvas com sprites
      */
     render(ctx) {
+        if (!spriteManager.isLoaded) {
+            // Fallback: desenho simples se sprites não carregarem
+            this.renderFallback(ctx);
+            return;
+        }
+
+        // Atualizar animação
+        this.updateAnimation();
+
+        // Desenhar corpo (segmentos)
+        for (let i = 1; i < this.body.length; i++) {
+            const pos = grid.gridToPixels(this.body[i].gridX, this.body[i].gridY);
+            
+            // Determinar tipo de segmento
+            let segmentType = 'straight';
+            if (i === this.body.length - 1) {
+                segmentType = 'tail';
+            }
+
+            const spriteKey = spriteManager.getBodySpriteKey(segmentType);
+            spriteManager.drawSprite(ctx, spriteKey, pos.pixelX, pos.pixelY, grid.cellSize, grid.cellSize);
+        }
+
+        // Desenhar cabeça com animação
+        const headPos = grid.gridToPixels(this.body[0].gridX, this.body[0].gridY);
+        
+        // Usar sprite de movimento animado
+        const movementSpriteKey = spriteManager.getMovementSpriteKey(this.direction, this.animationFrameIndex);
+        spriteManager.drawSprite(ctx, movementSpriteKey, headPos.pixelX, headPos.pixelY, grid.cellSize, grid.cellSize);
+    }
+
+    /**
+     * Renderização fallback (sem sprites)
+     */
+    renderFallback(ctx) {
         // Desenhar corpo
         ctx.fillStyle = this.color;
         for (let i = 1; i < this.body.length; i++) {
