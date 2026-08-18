@@ -57,5 +57,5 @@ class GridSystem {
     }
 }
 
-// Criar instância global
-const grid = new GridSystem(800, 600);
+// Criar instância global (16:9 Widescreen: 960x540 = 48x27 células de 20px)
+const grid = new GridSystem(960, 540);

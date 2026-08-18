@@ -1,6 +1,6 @@
 /**
  * Combat System
- * Gerencia colisões e combate entre entidades
+ * Gerencia colisões, cálculos de dano, tiros e combate com inimigos e chefão
  */
 
 class CombatSystem {
@@ -10,17 +10,11 @@ class CombatSystem {
         this.invincibleUntil = 0;
     }
 
-    /**
-     * Ativa modo invencível por um tempo
-     */
     activateInvincibility(duration) {
         this.isInvincible = true;
         this.invincibleUntil = Date.now() + duration;
     }
 
-    /**
-     * Atualiza estado de invencibilidade
-     */
     update() {
         if (this.isInvincible && Date.now() >= this.invincibleUntil) {
             this.isInvincible = false;
@@ -28,46 +22,107 @@ class CombatSystem {
     }
 
     /**
-     * Verifica colisão cobra x inimigo
+     * Processa colisões de projéteis com inimigos, boss e jogador
      */
-    checkSnakeEnemyCollision(snake, enemy) {
-        const snakeHead = snake.getHeadPosition();
-        const enemyPos = enemy.getPosition();
+    processProjectiles(projectiles, enemies, boss, snake) {
+        const projs = projectiles.getAll();
 
-        return snakeHead.gridX === enemyPos.gridX && snakeHead.gridY === enemyPos.gridY;
-    }
+        for (let i = projs.length - 1; i >= 0; i--) {
+            const p = projs[i];
+            if (p.isDead) continue;
 
-    /**
-     * Resolve colisão cobra x inimigo
-     */
-    resolveSnakeEnemyCollision(snake, enemy) {
-        if (this.isInvincible) {
-            // Em invencibilidade, derrota inimigo
-            enemy.takeDamage(1);
-            if (enemy.isDead) {
-                snake.gainXP(enemy.xpReward);
+            const pGrid = p.getGridPosition();
+
+            if (p.isPlayer) {
+                // Projétil do jogador atingindo inimigos comuns
+                if (enemies) {
+                    const activeEnemies = enemies.getAll();
+                    for (const enemy of activeEnemies) {
+                        if (enemy.gridX === pGrid.gridX && enemy.gridY === pGrid.gridY) {
+                            enemy.takeDamage(p.damage);
+                            p.isDead = true;
+                            if (typeof sfx !== 'undefined') sfx.playHit();
+                            if (enemy.isDead) {
+                                snake.gainXP(enemy.xpReward);
+                                snake.enemiesDefeated++;
+                                // Chance de drop de item
+                                if (window.game && window.game.currentStageObject && window.game.currentStageObject.items) {
+                                    window.game.currentStageObject.items.spawnRandomItem(enemy.gridX, enemy.gridY);
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                // Projétil do jogador atingindo o Boss
+                if (boss && !boss.isDead && !p.isDead) {
+                    if (boss.checkHit(p.x, p.y, p.damage)) {
+                        p.isDead = true;
+                        if (typeof sfx !== 'undefined') sfx.playHit();
+                    }
+                }
+            } else {
+                // Projétil inimigo atingindo o jogador
+                if (snake) {
+                    const head = snake.getHeadPosition();
+                    // Checar colisão com a cabeça ou corpo da cobra
+                    let hit = false;
+                    for (const segment of snake.body) {
+                        if (segment.gridX === pGrid.gridX && segment.gridY === pGrid.gridY) {
+                            hit = true;
+                            break;
+                        }
+                    }
+                    if (hit) {
+                        snake.takeDamage(p.damage, 'Atingido por disparo inimigo!');
+                        p.isDead = true;
+                    }
+                }
             }
-        } else {
-            // Sem invencibilidade, cobra toma dano
-            snake.takeDamage(1);
         }
     }
 
     /**
-     * Verifica colisão cobra x item
+     * Resolve colisão direta da cabeça da cobra com inimigos
      */
-    checkSnakeItemCollision(snake, item) {
-        const snakeHead = snake.getHeadPosition();
-        const itemPos = item.getPosition();
+    resolveSnakeEnemyCollision(snake, enemy) {
+        if (!snake || !enemy || enemy.isDead) return;
 
-        return snakeHead.gridX === itemPos.gridX && snakeHead.gridY === itemPos.gridY;
+        // Se a habilidade Devorar estiver ativa, a cobra engole o monstro por inteiro!
+        if (snake.isDevourActive) {
+            enemy.takeDamage(999);
+            snake.devourEnemy(enemy);
+            if (window.game && window.game.currentStageObject && window.game.currentStageObject.items) {
+                window.game.currentStageObject.items.spawnRandomItem(enemy.gridX, enemy.gridY);
+            }
+            return;
+        }
+
+        if (this.isInvincible || snake.isDashing) {
+            // Em dash ou invencível, atropela o inimigo!
+            enemy.takeDamage(5);
+            if (typeof sfx !== 'undefined') sfx.playHit();
+            if (enemy.isDead) {
+                snake.gainXP(enemy.xpReward);
+                snake.enemiesDefeated++;
+                if (window.game && window.game.currentStageObject && window.game.currentStageObject.items) {
+                    window.game.currentStageObject.items.spawnRandomItem(enemy.gridX, enemy.gridY);
+                }
+            }
+        } else {
+            snake.takeDamage(1, 'Colidiu com monstro!');
+            enemy.takeDamage(1);
+        }
     }
 
     /**
-     * Resolve colisão cobra x item
+     * Resolve colisão com item
      */
     resolveSnakeItemCollision(snake, item) {
         const value = item.collect();
+        snake.itemsCollected++;
+        snake.grow(1);
 
         switch (item.type) {
             case 'xp':
@@ -76,31 +131,23 @@ class CombatSystem {
             case 'heal':
                 snake.heal(value);
                 break;
-            case 'speed':
-                // TODO: Implementar buff de velocidade temporário
-                console.log('⚡ Buff de velocidade ativado!');
+            case 'fury':
+                snake.damageBuff = true;
+                snake.damageBuffUntil = Date.now() + value;
+                if (typeof hud !== 'undefined' && hud.showMessage) {
+                    hud.showMessage('🔥 FÚRIA ATIVADA! Dano Duplo nos Tiros!', 2000);
+                }
                 break;
-            case 'invincible':
-                this.activateInvincibility(value);
-                console.log('🛡️ Invencibilidade ativada!');
+            case 'shield':
+                snake.hasShield = true;
+                snake.shieldUntil = Date.now() + value;
+                break;
+            case 'magnet':
+                snake.isMagnetActive = true;
+                snake.magnetUntil = Date.now() + value;
                 break;
         }
     }
-
-    /**
-     * Aplica dano com multiplicador
-     */
-    calculateDamage(baseDamage) {
-        return Math.floor(baseDamage * this.damageMultiplier);
-    }
-
-    /**
-     * Define multiplicador de dano (para skills)
-     */
-    setDamageMultiplier(multiplier) {
-        this.damageMultiplier = multiplier;
-    }
 }
 
-// Criar instância global
 const combatSystem = new CombatSystem();

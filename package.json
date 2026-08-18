@@ -1,0 +1,14 @@
+{
+  "name": "jogo-da-cobrinha",
+  "version": "1.0.0",
+  "description": "Cobrinha RPG",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "echo 'No build step required for static site'"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}

@@ -2,23 +2,50 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cobrinha RPG - Web</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="game-container">
         <canvas id="game-canvas"></canvas>
         <div id="hud"></div>
+
+        <!-- Controles Móveis (Touch) -->
+        <div id="mobile-controls">
+            <div class="mobile-dpad">
+                <button class="dpad-btn up" onclick="input.queueDirection(0, -1)" aria-label="Cima">▲</button>
+                <div class="dpad-middle">
+                    <button class="dpad-btn left" onclick="input.queueDirection(-1, 0)" aria-label="Esquerda">◀</button>
+                    <div class="dpad-center"></div>
+                    <button class="dpad-btn right" onclick="input.queueDirection(1, 0)" aria-label="Direita">▶</button>
+                </div>
+                <button class="dpad-btn down" onclick="input.queueDirection(0, 1)" aria-label="Baixo">▼</button>
+            </div>
+
+            <div class="mobile-actions">
+                <button class="action-btn shoot" onclick="input.triggerSkill('shoot')" aria-label="Disparo">🎯<span class="btn-label">Tiro</span></button>
+                <button class="action-btn dash" onclick="input.triggerSkill('dash')" aria-label="Dash">💨<span class="btn-label">Dash</span></button>
+                <button class="action-btn shield" onclick="input.triggerSkill('shield')" aria-label="Escudo">🛡️<span class="btn-label">Escudo</span></button>
+                <button class="action-btn magnet" onclick="input.triggerSkill('magnet')" aria-label="Magnetismo">🧲<span class="btn-label">Ímã</span></button>
+                <button class="action-btn devour" onclick="input.triggerSkill('devour')" aria-label="Devorar Inimigos">🦷<span class="btn-label">Comer</span></button>
+            </div>
+        </div>
     </div>
 
-    <!-- Scripts de sistema core -->
+    <!-- Scripts de áudio, partículas e core -->
+    <script src="src/core/audio.js"></script>
+    <script src="src/core/particles.js"></script>
     <script src="src/core/grid.js"></script>
     <script src="src/core/input.js"></script>
     <script src="src/core/save.js"></script>
     <script src="src/core/sprite-manager.js"></script>
 
     <!-- Scripts de entidades -->
+    <script src="src/entities/projectile.js"></script>
     <script src="src/entities/snake.js"></script>
     <script src="src/entities/enemy.js"></script>
     <script src="src/entities/item.js"></script>
