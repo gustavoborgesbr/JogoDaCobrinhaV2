@@ -31,9 +31,14 @@ class InputHandler {
         const key = e.key.toLowerCase();
         this.keys[key] = true;
 
-        // Menu shortcuts (Game Over / Stage Clear / Pause)
+        // Menu shortcuts (Cutscene / Game Over / Stage Clear / Pause)
         if (typeof menuSystem !== 'undefined' && menuSystem.currentMenu) {
-            if (key === 'enter' || key === ' ') {
+            if (menuSystem.currentMenu === 'cutscene') {
+                if (key === 'escape' || key === ' ' || key === 'enter') {
+                    menuSystem.skipCutscene();
+                    return;
+                }
+            } else if (key === 'enter' || key === ' ') {
                 if (menuSystem.currentMenu === 'gameover') {
                     menuSystem.restartStage();
                     return;

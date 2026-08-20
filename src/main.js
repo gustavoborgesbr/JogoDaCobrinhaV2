@@ -38,7 +38,7 @@ class Game {
         skillsSystem.init();
     }
 
-    startStage(stageNumber = 1) {
+    startStage(stageNumber = 1, carryOverSnake = null) {
         this.currentStage = stageNumber;
         skillsSystem.init();
 
@@ -59,6 +59,23 @@ class Game {
         const startX = Math.floor(grid.cols / 2);
         const startY = Math.floor(grid.rows / 2);
         this.snake = new Snake(startX, startY);
+
+        if (carryOverSnake) {
+            this.snake.level = carryOverSnake.level;
+            this.snake.xp = carryOverSnake.xp;
+            this.snake.xpToNextLevel = carryOverSnake.xpToNextLevel;
+            this.snake.runXP = carryOverSnake.runXP;
+            this.snake.itemsCollected = carryOverSnake.itemsCollected;
+            this.snake.enemiesDefeated = carryOverSnake.enemiesDefeated;
+            this.snake.maxHealth = carryOverSnake.maxHealth;
+            this.snake.health = carryOverSnake.health;
+            
+            // Reapply body length if it was higher (roguelike carryover)
+            const extraBodySegments = carryOverSnake.body.length - 3;
+            for (let i = 0; i < extraBodySegments; i++) {
+                this.snake.body.push({ ...this.snake.body[this.snake.body.length - 1] });
+            }
+        }
 
         // Limpar projéteis e partículas
         projectilePool.clear();
@@ -179,7 +196,9 @@ class Game {
             musicManager.playTheme('gameover');
         }
         if (this.snake) {
-            saveSystem.addPermanentXP(this.snake.runXP);
+            const retainedXp = Math.floor(this.snake.runXP / 3);
+            saveSystem.addPermanentXP(retainedXp);
+            this.snake.runXP = retainedXp; // Update runXP for UI to display the penalized amount
             menuSystem.showGameOver(this.snake);
         }
     }

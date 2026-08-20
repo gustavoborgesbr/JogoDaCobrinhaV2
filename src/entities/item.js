@@ -129,20 +129,38 @@ class Item {
         const radius = grid.cellSize * 0.38;
 
         ctx.save();
-        ctx.fillStyle = this.color;
-        ctx.shadowColor = this.color;
-        ctx.shadowBlur = this.rarity !== 'common' ? 10 : 4;
 
-        ctx.beginPath();
-        ctx.arc(this.px, this.py + floatOffset, radius, 0, Math.PI * 2);
-        ctx.fill();
+        if (this.type === 'heal' && typeof spriteManager !== 'undefined' && spriteManager.appleImageLoaded) {
+            // Draw apple image
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+            ctx.shadowBlur = 6;
+            ctx.shadowOffsetY = 3;
+            ctx.imageSmoothingEnabled = false;
+            
+            const size = grid.cellSize * 1.1; // Slightly larger for better visibility
+            ctx.drawImage(
+                spriteManager.appleImage,
+                this.px - size / 2,
+                this.py + floatOffset - size / 2,
+                size,
+                size
+            );
+        } else {
+            ctx.fillStyle = this.color;
+            ctx.shadowColor = this.color;
+            ctx.shadowBlur = this.rarity !== 'common' ? 10 : 4;
 
-        // Anel decorativo
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.arc(this.px, this.py + floatOffset, radius * 0.8, 0, Math.PI * 2);
-        ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(this.px, this.py + floatOffset, radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Anel decorativo
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(this.px, this.py + floatOffset, radius * 0.8, 0, Math.PI * 2);
+            ctx.stroke();
+        }
 
         ctx.restore();
     }

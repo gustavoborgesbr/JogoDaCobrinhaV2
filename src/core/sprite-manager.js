@@ -23,6 +23,14 @@ class SpriteManager {
         };
         this.bgImage.src = 'assets/sprites/hub-background.jpg';
 
+        // Apple item image
+        this.appleImage = new Image();
+        this.appleImageLoaded = false;
+        this.appleImage.onload = () => {
+            this.appleImageLoaded = true;
+        };
+        this.appleImage.src = 'assets/apple.png';
+
         // Paletas de cores para as skins da cobra RPG
         this.palettes = {
             emerald: {

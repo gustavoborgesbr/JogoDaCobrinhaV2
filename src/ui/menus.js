@@ -183,7 +183,10 @@ class MenuSystem {
                     <div class="guide-item"><strong>🛡️ Proteção Inicial:</strong> Toda fase inicia com 5 segundos de invencibilidade total para você se posicionar.</div>
                     <div class="guide-item"><strong>💾 Roguelite:</strong> Ao perder a fase, todo o XP ganho permanece salvo para melhorias permanentes!</div>
                 </div>
-                <button class="btn-secondary" onclick="menuSystem.showMenu('main')">⬅ Voltar</button>
+                <div class="menu-btn-group" style="margin-top: 14px;">
+                    <button class="btn-primary" onclick="menuSystem.playCutscene(() => menuSystem.showMenu('about'))">🎬 Assistir Cutscene de Abertura</button>
+                    <button class="btn-secondary" onclick="menuSystem.showMenu('main')">⬅ Voltar ao Menu</button>
+                </div>
             </div>
         `;
         container.appendChild(aboutMenu);
@@ -238,6 +241,27 @@ class MenuSystem {
             </div>
         `;
         container.appendChild(victoryMenu);
+
+        // Menu Cutscene de Entrada
+        const cutsceneMenu = document.createElement('div');
+        cutsceneMenu.id = 'menu-cutscene';
+        cutsceneMenu.className = 'menu cutscene-menu';
+        cutsceneMenu.innerHTML = `
+            <div class="cutscene-wrapper" onclick="menuSystem.skipCutscene()">
+                <video id="cutscene-video" playsinline preload="auto">
+                    <source src="assets/intro-stage1.mp4" type="video/mp4">
+                    <source src="assets/faça_um_vídeo_simulando_a_entr.mp4" type="video/mp4">
+                    Seu navegador não suporta a tag de vídeo.
+                </video>
+                <div class="cutscene-overlay-controls">
+                    <div class="cutscene-title-badge">🎬 Entrada no Templo Ancestral</div>
+                    <button class="cutscene-skip-btn" id="cutscene-skip-btn" onclick="event.stopPropagation(); menuSystem.skipCutscene()">
+                        Pular Entrada ⏭ <span class="skip-key-hint">(ESC / Espaço)</span>
+                    </button>
+                </div>
+            </div>
+        `;
+        container.appendChild(cutsceneMenu);
     }
 
     showMenu(menuName) {
@@ -433,23 +457,92 @@ class MenuSystem {
         this.startGame(this.pendingStageStart || 1);
     }
 
-    startGame(stageNum = 1) {
+    startGame(stageNum = 1, carryOverSnake = null, forceSkipCutscene = false) {
+        if (stageNum === 1 && !carryOverSnake && !forceSkipCutscene) {
+            this.playCutscene(() => {
+                this.showMenu(null);
+                if (window.game) {
+                    window.game.startStage(stageNum, carryOverSnake);
+                }
+            });
+            return;
+        }
+
         this.showMenu(null);
         if (window.game) {
-            window.game.startStage(stageNum);
+            window.game.startStage(stageNum, carryOverSnake);
+        }
+    }
+
+    playCutscene(onComplete) {
+        const video = document.getElementById('cutscene-video');
+        if (!video) {
+            if (onComplete) onComplete();
+            return;
+        }
+
+        if (typeof musicManager !== 'undefined') {
+            musicManager.stopTheme();
+        }
+
+        this.onCutsceneComplete = onComplete;
+        this.cutsceneActive = true;
+        this.showMenu('cutscene');
+
+        try {
+            video.currentTime = 0;
+        } catch (e) {}
+
+        const finishCutscene = () => {
+            if (!this.cutsceneActive) return;
+            this.cutsceneActive = false;
+            video.pause();
+            video.onended = null;
+            video.onerror = null;
+            const callback = this.onCutsceneComplete;
+            this.onCutsceneComplete = null;
+            if (callback) {
+                callback();
+            } else {
+                this.showMenu('main');
+            }
+        };
+
+        this.cutsceneFinishHandler = finishCutscene;
+        video.onended = finishCutscene;
+        video.onerror = () => {
+            console.warn('Erro ou formato não suportado no vídeo da cutscene:', video.error);
+            finishCutscene();
+        };
+
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(err => {
+                console.log('Autoplay com áudio restrito pelo navegador, ativando mudo para reproduzir:', err);
+                video.muted = true;
+                video.play().catch(e => {
+                    console.warn('Falha ao dar play no vídeo:', e);
+                });
+            });
+        }
+    }
+
+    skipCutscene() {
+        if (this.cutsceneActive && this.cutsceneFinishHandler) {
+            this.cutsceneFinishHandler();
         }
     }
 
     startNextStage() {
         if (window.game) {
             const next = (window.game.currentStage || 1) + 1;
-            this.startGame(next);
+            this.startGame(next, window.game.snake, true);
         }
     }
 
     restartStage() {
         if (window.game) {
-            this.startGame(window.game.currentStage || 1);
+            this.startGame(window.game.currentStage || 1, null, true);
         }
     }
 
@@ -479,7 +572,7 @@ class MenuSystem {
             stats.innerHTML = `
                 <div class="gameover-box">
                     <p>⭐ Nível da Partida: <strong>${snake.level}</strong></p>
-                    <p>💎 XP Guardado no Save: <strong>+${snake.runXP} XP</strong></p>
+                    <p>💎 XP Salvo (Penalidade de Derrota - Apenas 1/3 Mantido): <strong style="color: #e74c3c;">+${snake.runXP} XP</strong></p>
                     <p>📦 Itens Coletados: <strong>${snake.itemsCollected}</strong></p>
                     <p>⚔️ Monstros Eliminados: <strong>${snake.enemiesDefeated}</strong></p>
                 </div>
